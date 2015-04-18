@@ -10,3 +10,9 @@ func (cli *CLI) New() {
 	url := client.NewCanvas()
 	fmt.Println(url)
 }
+
+func (cli *CLI) Account() {
+	client := NewClient()
+	client.DoAuth()
+	fmt.Println(client.Account)
+}

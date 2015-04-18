@@ -37,7 +37,7 @@ type Client struct {
 	ApiUrl  string
 	WebUrl  string
 	Auth    AuthToken
-	account Account
+	Account Account
 }
 
 var contentJSON = "application/json"
@@ -46,10 +46,11 @@ var authTokenFile = "auth-token.json"
 
 func home(path string) string {
 	usr, _ := user.Current()
+	canvasHome := usr.HomeDir + "/" + canvasDir
 	if path == "" {
-		return usr.HomeDir
+		return canvasHome
 	}
-	return usr.HomeDir + "/" + canvasDir + "/" + path
+	return canvasHome + "/" + path
 }
 
 func exists(path string) (bool, error) {
@@ -65,7 +66,8 @@ func exists(path string) (bool, error) {
 
 func check(e error) {
 	if e != nil {
-		log.Fatal(e)
+		fmt.Println(e)
+		os.Exit(1)
 	}
 }
 
@@ -96,36 +98,44 @@ func (c *Client) JoinWebUrl(path string) string {
 //Prompt user for login and auth with
 //acquire auth token
 func (c *Client) Login() {
+	//get username
 	var identity string
 	fmt.Fprintf(os.Stderr, "Please enter your username or email: ")
 	_, err := fmt.Scanln(&identity)
 	check(err)
+
+	//get password
 	fmt.Fprintf(os.Stderr, "Please enter your password: ")
 	pass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
 	fmt.Fprintf(os.Stderr, "\n")
 	check(err)
 	password := string(pass)
+
+	//build auth body
 	auth := Login{identity, password}
-	loginJson, err := json.Marshal(auth)
+	authJson, err := json.Marshal(auth)
 	check(err)
-	authString := string(loginJson)
+	body := string(authJson)
+
+	//make request
 	request := gorequest.New()
 	resp, body, errs := request.Post(c.Url("tokens")).
 		Type("json").
-		Send(authString).
+		Send(body).
 		End()
-
 	if errs != nil {
 		log.Fatal(errs)
 	}
-	if resp.StatusCode >= 400 {
-		log.Fatal("Login not valid")
-	} else {
+
+	switch resp.StatusCode {
+	case 201:
 		var token AuthToken
 		err = json.Unmarshal([]byte(body), &token)
 		check(err)
 		c.Auth = token
 		c.Save()
+	default:
+		log.Fatal("Login not valid: ", resp.StatusCode)
 	}
 }
 
@@ -139,7 +149,7 @@ func (c *Client) Save() {
 		check(err)
 	}
 
-	authTokenPath := home("/" + authTokenFile)
+	authTokenPath := home(authTokenFile)
 	authTokenJson, _ := json.Marshal(c.Auth)
 	err = ioutil.WriteFile(authTokenPath, authTokenJson, 0644)
 	if err != nil {
@@ -157,6 +167,7 @@ func (c *Client) DoAuth() {
 	authPath := home(authTokenFile)
 	authExists, err := exists(authPath)
 	check(err)
+
 	if authExists {
 		authTokenJson, err := ioutil.ReadFile(authPath)
 		check(err)
@@ -164,16 +175,16 @@ func (c *Client) DoAuth() {
 		err = json.Unmarshal(authTokenJson, &token)
 		check(err)
 		c.Auth = token
-	}
-	//ask user for creds
-	if !c.LoggedIn() {
+	} else {
 		c.Login()
 	}
-	//always fetch fresh account info
+
+	//this will trigger login if account is stale
 	c.FetchAccount()
 }
 
 func (c *Client) FetchAccount() {
+	//TODO: change to HasAuth()
 	if !c.LoggedIn() {
 		log.Fatal("Must be logged in")
 	}
@@ -187,13 +198,17 @@ func (c *Client) FetchAccount() {
 		log.Fatal(errs)
 	}
 
-	if resp.StatusCode >= 400 {
+	switch resp.StatusCode {
+	case 404:
 		log.Fatal("Account not found")
-	} else {
+	case 403:
+		fmt.Println("Login invalid")
+		c.DoAuth()
+	case 200:
 		var account Account
 		err := json.Unmarshal([]byte(body), &account)
 		check(err)
-		c.account = account
+		c.Account = account
 	}
 }
 
@@ -204,7 +219,7 @@ func (c *Client) NewCanvas() (url string) {
 	}
 
 	request := gorequest.New()
-	newCanvasUrl := c.Url("canvases/" + c.account.Username)
+	newCanvasUrl := c.Url("canvases/" + c.Account.Username)
 	resp, body, errs := request.Post(newCanvasUrl).
 		Set("Authorization", "Bearer "+c.Auth.Token).
 		End()
@@ -213,14 +228,15 @@ func (c *Client) NewCanvas() (url string) {
 		log.Fatal(errs)
 	}
 
-	if resp.StatusCode >= 400 {
-		log.Fatal(body)
-	} else {
+	switch resp.StatusCode {
+	case 201:
 		var canvas Canvas
 		err := json.Unmarshal([]byte(body), &canvas)
 		check(err)
 		url = c.JoinWebUrl(canvas.Collection + "/untitled/" + canvas.Name)
-		return
+	default:
+		log.Fatal(body)
 	}
+
 	return
 }
