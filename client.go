@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"os"
 
 	"github.com/parnurzeal/gorequest"
@@ -46,6 +47,31 @@ func NewClient() *Client {
 		client.WebUrl = url
 	}
 	return &client
+}
+
+func (c *Client) TokenLogin(auth Login) (token AuthToken, err error) {
+	//build auth body
+	authJson, err := json.Marshal(auth)
+	check(err)
+
+	body := string(authJson)
+	request := gorequest.New()
+	resp, body, errs := request.Post(c.Url("tokens")).
+		Type("json").
+		Send(body).
+		End()
+
+	if errs != nil {
+		check(errs[0])
+	}
+
+	switch resp.StatusCode {
+	case 201:
+		err = json.Unmarshal([]byte(body), &token)
+	default:
+		log.Fatal("Login not valid: ", resp.StatusCode)
+	}
+	return
 }
 
 func (c *Client) FetchAccount() (account Account, err error) {

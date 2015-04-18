@@ -11,6 +11,7 @@ var usage = `Canvas CLI
 
 Usage:
 	canvas account
+	canvas login
 	canvas new [<filename>]
 	canvas list
 	canvas -h | --help
@@ -42,5 +43,7 @@ func main() {
 		cli.WhoAmI()
 	case arguments["list"].(bool):
 		cli.List()
+	case arguments["login"].(bool):
+		cli.Login()
 	}
 }

@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/user"
 
-	"github.com/parnurzeal/gorequest"
 	"golang.org/x/crypto/ssh/terminal"
 )
 
@@ -95,32 +93,12 @@ func (cli *CLI) Login() {
 	check(err)
 	password := string(pass)
 
-	//build auth body
 	auth := Login{identity, password}
-	authJson, err := json.Marshal(auth)
+	token, err := cli.Client.TokenLogin(auth)
 	check(err)
-	body := string(authJson)
 
-	//make request
-	request := gorequest.New()
-	resp, body, errs := request.Post(cli.Client.Url("tokens")).
-		Type("json").
-		Send(body).
-		End()
-	if errs != nil {
-		log.Fatal(errs)
-	}
-
-	switch resp.StatusCode {
-	case 201:
-		var token AuthToken
-		err = json.Unmarshal([]byte(body), &token)
-		check(err)
-		cli.Client.Auth = token
-		cli.Save()
-	default:
-		log.Fatal("Login not valid: ", resp.StatusCode)
-	}
+	cli.Client.Auth = token
+	cli.Save()
 }
 
 // save login to `~/.canvas/auth-token.json`
@@ -136,9 +114,7 @@ func (cli *CLI) Save() {
 	authTokenPath := home(authTokenFile)
 	authTokenJson, _ := json.Marshal(cli.Client.Auth)
 	err = ioutil.WriteFile(authTokenPath, authTokenJson, 0644)
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err)
 }
 
 func home(path string) string {
