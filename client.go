@@ -3,8 +3,10 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"os"
+	"os/user"
 
 	"github.com/parnurzeal/gorequest"
 	"golang.org/x/crypto/ssh/terminal"
@@ -34,11 +36,38 @@ type Account struct {
 type Client struct {
 	ApiUrl  string
 	WebUrl  string
-	auth    AuthToken
+	Auth    AuthToken
 	account Account
 }
 
 var contentJSON = "application/json"
+var canvasDir = ".canvas"
+var authTokenFile = "auth-token.json"
+
+func home(path string) string {
+	usr, _ := user.Current()
+	if path == "" {
+		return usr.HomeDir
+	}
+	return usr.HomeDir + "/" + canvasDir + "/" + path
+}
+
+func exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
+}
+
+func check(e error) {
+	if e != nil {
+		log.Fatal(e)
+	}
+}
 
 func NewClient() *Client {
 	client := Client{
@@ -70,21 +99,15 @@ func (c *Client) Login() {
 	var identity string
 	fmt.Fprintf(os.Stderr, "Please enter your username or email: ")
 	_, err := fmt.Scanln(&identity)
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err)
 	fmt.Fprintf(os.Stderr, "Please enter your password: ")
 	pass, err := terminal.ReadPassword(int(os.Stdin.Fd()))
-	if err != nil {
-		log.Fatal(err)
-	}
-	fmt.Println()
+	fmt.Fprintf(os.Stderr, "\n")
+	check(err)
 	password := string(pass)
 	auth := Login{identity, password}
 	loginJson, err := json.Marshal(auth)
-	if err != nil {
-		log.Fatal(err)
-	}
+	check(err)
 	authString := string(loginJson)
 	request := gorequest.New()
 	resp, body, errs := request.Post(c.Url("tokens")).
@@ -100,23 +123,53 @@ func (c *Client) Login() {
 	} else {
 		var token AuthToken
 		err = json.Unmarshal([]byte(body), &token)
-		if err != nil {
-			log.Fatal(err)
-		}
-		c.auth = token
+		check(err)
+		c.Auth = token
+		c.Save()
+	}
+}
+
+// save login to `~/.canvas/auth-token.json`
+func (c *Client) Save() {
+	dirExists, err := exists(home(""))
+	check(err)
+
+	if !dirExists {
+		err := os.Mkdir(home(""), 0755)
+		check(err)
+	}
+
+	authTokenPath := home("/" + authTokenFile)
+	authTokenJson, _ := json.Marshal(c.Auth)
+	err = ioutil.WriteFile(authTokenPath, authTokenJson, 0644)
+	if err != nil {
+		log.Fatal(err)
 	}
 }
 
 func (c *Client) LoggedIn() bool {
-	return c.auth.Token != ""
+	return c.Auth.Token != ""
 }
 
 //use stored token or initiate login
-func (c *Client) Auth() {
-	//TODO: check for stored creds
+func (c *Client) DoAuth() {
+	//check for stored creds
+	authPath := home(authTokenFile)
+	authExists, err := exists(authPath)
+	check(err)
+	if authExists {
+		authTokenJson, err := ioutil.ReadFile(authPath)
+		check(err)
+		var token AuthToken
+		err = json.Unmarshal(authTokenJson, &token)
+		check(err)
+		c.Auth = token
+	}
+	//ask user for creds
 	if !c.LoggedIn() {
 		c.Login()
 	}
+	//always fetch fresh account info
 	c.FetchAccount()
 }
 
@@ -127,7 +180,7 @@ func (c *Client) FetchAccount() {
 
 	request := gorequest.New()
 	resp, body, errs := request.Get(c.Url("account")).
-		Set("Authorization", "Bearer "+c.auth.Token).
+		Set("Authorization", "Bearer "+c.Auth.Token).
 		End()
 
 	if errs != nil {
@@ -139,14 +192,13 @@ func (c *Client) FetchAccount() {
 	} else {
 		var account Account
 		err := json.Unmarshal([]byte(body), &account)
-		if err != nil {
-			log.Fatal(err)
-		}
+		check(err)
 		c.account = account
 	}
 }
 
-func (c *Client) NewCanvas() {
+//Create a new canvas
+func (c *Client) NewCanvas() (url string) {
 	if !c.LoggedIn() {
 		log.Fatal("Must be logged in")
 	}
@@ -154,7 +206,7 @@ func (c *Client) NewCanvas() {
 	request := gorequest.New()
 	newCanvasUrl := c.Url("canvases/" + c.account.Username)
 	resp, body, errs := request.Post(newCanvasUrl).
-		Set("Authorization", "Bearer "+c.auth.Token).
+		Set("Authorization", "Bearer "+c.Auth.Token).
 		End()
 
 	if errs != nil {
@@ -166,11 +218,9 @@ func (c *Client) NewCanvas() {
 	} else {
 		var canvas Canvas
 		err := json.Unmarshal([]byte(body), &canvas)
-		if err != nil {
-			log.Fatal(err)
-		}
-		url := c.JoinWebUrl(canvas.Collection + "/untitled/" + canvas.Name)
-		fmt.Println(url)
+		check(err)
+		url = c.JoinWebUrl(canvas.Collection + "/untitled/" + canvas.Name)
+		return
 	}
-
+	return
 }
