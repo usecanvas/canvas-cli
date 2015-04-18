@@ -1,0 +1,24 @@
+{
+	"ImportPath": "github.com/usecanvas/canvas-cli",
+	"GoVersion": "go1.3",
+	"Deps": [
+		{
+			"ImportPath": "github.com/docopt/docopt-go",
+			"Comment": "0.6.1-5-g854c423",
+			"Rev": "854c423c810880e30b9fecdabb12d54f4a92f9bb"
+		},
+		{
+			"ImportPath": "github.com/parnurzeal/gorequest",
+			"Comment": "v0.2.4",
+			"Rev": "30f504965773bcd6855e423fabea0fc75cdfefef"
+		},
+		{
+			"ImportPath": "golang.org/x/crypto/ssh/terminal",
+			"Rev": "8b27f58b78dbd60e9a26b60b0d908ea642974b6d"
+		},
+		{
+			"ImportPath": "golang.org/x/net/publicsuffix",
+			"Rev": "84ba27dd5b2d8135e9da1395277f2c9333a2ffda"
+		}
+	]
+}
