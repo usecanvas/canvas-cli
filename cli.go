@@ -23,7 +23,7 @@ var authTokenFile = "auth-token.json"
 func NewCLI() (cli *CLI) {
 	client := NewClient()
 	cli = &CLI{Client: *client}
-	cli.DoAuth()
+	cli.doAuth()
 	return
 }
 
@@ -54,35 +54,6 @@ func (cli *CLI) ListCanvases() {
 	}
 }
 
-//use stored token or initiate login
-func (cli *CLI) DoAuth() {
-	//check for stored creds
-	authPath := home(authTokenFile)
-	authExists, err := exists(authPath)
-	check(err)
-
-	if authExists {
-		authTokenJson, err := ioutil.ReadFile(authPath)
-		check(err)
-		var token AuthToken
-		err = json.Unmarshal(authTokenJson, &token)
-		check(err)
-		cli.Client.Auth = token
-	} else {
-		cli.Login()
-	}
-
-	//TODO: maybe convert to error checking
-	account, err := cli.Client.FetchAccount()
-	if err != nil {
-		cli.DoAuth()
-	} else {
-		//prompt again
-		cli.Account = account
-		cli.Save()
-	}
-}
-
 //Prompt user for login and auth with
 //acquire auth token
 func (cli *CLI) Login() {
@@ -104,11 +75,40 @@ func (cli *CLI) Login() {
 	check(err)
 
 	cli.Client.Auth = token
-	cli.Save()
+	cli.save()
+}
+
+//use stored token or initiate login
+func (cli *CLI) doAuth() {
+	//check for stored creds
+	authPath := home(authTokenFile)
+	authExists, err := exists(authPath)
+	check(err)
+
+	if authExists {
+		authTokenJson, err := ioutil.ReadFile(authPath)
+		check(err)
+		var token AuthToken
+		err = json.Unmarshal(authTokenJson, &token)
+		check(err)
+		cli.Client.Auth = token
+	} else {
+		cli.Login()
+	}
+
+	//TODO: maybe convert to error checking
+	account, err := cli.Client.FetchAccount()
+	if err != nil {
+		cli.doAuth()
+	} else {
+		//prompt again
+		cli.Account = account
+		cli.save()
+	}
 }
 
 // save login to `~/.canvas/auth-token.json`
-func (cli *CLI) Save() {
+func (cli *CLI) save() {
 	dirExists, err := exists(home(""))
 	check(err)
 
@@ -123,6 +123,10 @@ func (cli *CLI) Save() {
 	check(err)
 }
 
+//helper functions
+//TODO: configure canvas home via ENV
+//TODO: make part of CLI struct
+//TODO: use filepath
 func home(path string) string {
 	usr, _ := user.Current()
 	canvasHome := usr.HomeDir + "/" + canvasDir
@@ -132,6 +136,7 @@ func home(path string) string {
 	return canvasHome + "/" + path
 }
 
+//helper for dir or path existence
 func exists(path string) (bool, error) {
 	_, err := os.Stat(path)
 	if err == nil {

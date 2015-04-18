@@ -7,14 +7,13 @@ import (
 	"github.com/docopt/docopt-go"
 )
 
-var usage = `Canvas CLI
-
+var usage = `Canvas CLI 0.0.1
 Usage:
+	canvas new [<filename>]
+	canvas list
+	canvas pull <id>
 	canvas account
 	canvas login
-	canvas new [<filename>]
-	canvas pull <id>
-	canvas list
 	canvas -h | --help
 	canvas --version
 
@@ -23,6 +22,7 @@ Options:
   --version      Show version.
 `
 
+//unified error handler
 func check(e error) {
 	if e != nil {
 		fmt.Println(e)
@@ -30,7 +30,7 @@ func check(e error) {
 	}
 }
 
-//parses and validates argugmetns, then
+//parses and validates argugments, then
 //calls the appropriate method in the CLI class
 //with the user submitted arguments
 func main() {

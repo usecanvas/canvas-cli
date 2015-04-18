@@ -19,6 +19,7 @@ type Login struct {
 	Password string `json:"password"`
 }
 
+//TODO: get orgs list from API
 type Account struct {
 	Id       string
 	Username string
@@ -75,10 +76,7 @@ func (c *Client) TokenLogin(auth Login) (token AuthToken, err error) {
 }
 
 func (c *Client) FetchAccount() (account Account, err error) {
-	request := gorequest.New()
-	resp, body, errs := request.Get(c.Url("account")).
-		Set("Authorization", "Bearer "+c.Auth.Token).
-		End()
+	resp, body, errs := c.get(c.Url("account")).End()
 
 	if errs != nil {
 		err = errs[0]
@@ -121,7 +119,7 @@ func (c *Client) NewCanvas(collection string) (canvas Canvas, err error) {
 
 func (c *Client) GetCanvas(collection string, name string) (canvas Canvas, err error) {
 	canvasUrl := c.Url("canvases/" + collection + "/" + name)
-	agent := c.Get(canvasUrl)
+	agent := c.get(canvasUrl)
 	resp, body, errs := agent.End()
 
 	if errs != nil {
@@ -142,7 +140,7 @@ func (c *Client) GetCanvas(collection string, name string) (canvas Canvas, err e
 
 func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 	canvasesUrl := c.Url("canvases/" + collection)
-	agent := c.Get(canvasesUrl)
+	agent := c.get(canvasesUrl)
 	resp, body, errs := agent.End()
 
 	if errs != nil {
@@ -162,7 +160,7 @@ func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 	return
 }
 
-func (c *Client) Get(path string) (agent *gorequest.SuperAgent) {
+func (c *Client) get(path string) (agent *gorequest.SuperAgent) {
 	agent = gorequest.New()
 	agent.Get(path).
 		Set("Authorization", "Bearer "+c.Auth.Token)
