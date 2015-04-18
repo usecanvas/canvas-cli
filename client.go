@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"os"
 
 	"github.com/parnurzeal/gorequest"
@@ -31,6 +30,8 @@ type Client struct {
 	WebUrl string
 	Auth   AuthToken
 }
+
+//TODO: return InvalidLogin error so CLI can re-auth?
 
 var contentJSON = "application/json"
 
@@ -70,7 +71,7 @@ func (c *Client) TokenLogin(auth Login) (token AuthToken, err error) {
 	case 201:
 		err = json.Unmarshal([]byte(body), &token)
 	default:
-		log.Fatal("Login not valid: ", resp.StatusCode)
+		err = errors.New("Login not valid")
 	}
 	return
 }
