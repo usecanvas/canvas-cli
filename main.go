@@ -13,6 +13,7 @@ Usage:
 	canvas account
 	canvas login
 	canvas new [<filename>]
+	canvas pull <id>
 	canvas list
 	canvas -h | --help
 	canvas --version
@@ -33,17 +34,19 @@ func check(e error) {
 //calls the appropriate method in the CLI class
 //with the user submitted arguments
 func main() {
-	arguments, _ := docopt.Parse(usage, nil, true, "Canvas CLI 0.1", false)
+	args, _ := docopt.Parse(usage, nil, true, "Canvas CLI 0.1", false)
 	cli := NewCLI()
 
 	switch {
-	case arguments["new"].(bool):
+	case args["new"].(bool):
 		cli.NewCanvas()
-	case arguments["account"].(bool):
+	case args["account"].(bool):
 		cli.WhoAmI()
-	case arguments["list"].(bool):
-		cli.List()
-	case arguments["login"].(bool):
+	case args["list"].(bool):
+		cli.ListCanvases()
+	case args["login"].(bool):
 		cli.Login()
+	case args["pull"].(bool):
+		cli.PullCanvas(args["<id>"].(string))
 	}
 }

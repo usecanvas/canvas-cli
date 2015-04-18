@@ -119,7 +119,28 @@ func (c *Client) NewCanvas(collection string) (canvas Canvas, err error) {
 	return
 }
 
-func (c *Client) Canvases(collection string) (canvases []Canvas, err error) {
+func (c *Client) GetCanvas(collection string, name string) (canvas Canvas, err error) {
+	canvasUrl := c.Url("canvases/" + collection + "/" + name)
+	agent := c.Get(canvasUrl)
+	resp, body, errs := agent.End()
+
+	if errs != nil {
+		err = errs[0]
+		return
+	}
+
+	switch resp.StatusCode {
+	case 200:
+		err = json.Unmarshal([]byte(body), &canvas)
+	case 404:
+		err = errors.New("Not found")
+	default:
+		err = errors.New("Get Canvas Failed")
+	}
+	return
+}
+
+func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 	canvasesUrl := c.Url("canvases/" + collection)
 	agent := c.Get(canvasesUrl)
 	resp, body, errs := agent.End()
@@ -135,7 +156,7 @@ func (c *Client) Canvases(collection string) (canvases []Canvas, err error) {
 	case 404:
 		err = errors.New("Not found")
 	default:
-		err = errors.New("List canvases failed")
+		err = errors.New("Get Canvases failed")
 	}
 
 	return

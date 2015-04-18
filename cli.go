@@ -40,8 +40,14 @@ func (cli *CLI) WhoAmI() {
 	fmt.Println("Email:    ", account.Email)
 }
 
-func (cli *CLI) List() {
-	canvases, err := cli.Client.Canvases(cli.Account.Username)
+func (cli *CLI) PullCanvas(id string) {
+	canvas, err := cli.Client.GetCanvas(cli.Account.Username, id)
+	check(err)
+	fmt.Println(canvas)
+}
+
+func (cli *CLI) ListCanvases() {
+	canvases, err := cli.Client.GetCanvases(cli.Account.Username)
 	check(err)
 	for _, canvas := range canvases {
 		fmt.Println(canvas)
