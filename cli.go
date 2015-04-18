@@ -14,5 +14,7 @@ func (cli *CLI) New() {
 func (cli *CLI) Account() {
 	client := NewClient()
 	client.DoAuth()
-	fmt.Println(client.Account)
+	account := client.Account
+	fmt.Println("Username: ", account.Username)
+	fmt.Println("Email:    ", account.Email)
 }
