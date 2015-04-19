@@ -9,8 +9,8 @@ import (
 )
 
 type AuthToken struct {
-	RefreshToken string
-	Token        string
+	RefreshToken string `json:"refresh_token"`
+	Token        string `json:"token"`
 }
 
 type Login struct {
@@ -87,7 +87,7 @@ func (c *Client) FetchAccount() (account Account, err error) {
 	switch resp.StatusCode {
 	case 404:
 		err = errors.New("Account not found")
-	case 403:
+	case 401, 403:
 		err = errors.New("Login invalid")
 	case 200:
 		err = json.Unmarshal([]byte(body), &account)

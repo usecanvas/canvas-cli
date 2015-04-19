@@ -97,11 +97,12 @@ func (cli *CLI) doAuth() {
 	}
 
 	//TODO: maybe convert to error checking
-	account, err := cli.Client.FetchAccount()
+	var account Account
+	account, err = cli.Client.FetchAccount()
 	if err != nil {
+		cli.Login()
 		cli.doAuth()
 	} else {
-		//prompt again
 		cli.Account = account
 		cli.save()
 	}
