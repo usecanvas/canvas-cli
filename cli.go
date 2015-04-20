@@ -43,7 +43,7 @@ func (cli *CLI) WhoAmI() {
 func (cli *CLI) PullCanvas(id string) {
 	canvas, err := cli.Client.GetCanvas(cli.Account.Username, id)
 	check(err)
-	fmt.Println(canvas)
+	fmt.Println(canvas.Body())
 }
 
 func (cli *CLI) ListCanvases() {
