@@ -30,7 +30,7 @@ func NewCLI() (cli *CLI) {
 func (cli *CLI) NewCanvas() {
 	canvas, err := cli.Client.NewCanvas(cli.Account.Username)
 	check(err)
-	canvas.URL = cli.Client.JoinWebUrl(canvas.Collection + "/untitled/" + canvas.Name)
+	canvas.URL = cli.Client.JoinWebUrl(canvas.Collection + "/-/" + canvas.Name)
 	fmt.Println(canvas.URL)
 }
 
@@ -50,7 +50,8 @@ func (cli *CLI) ListCanvases() {
 	canvases, err := cli.Client.GetCanvases(cli.Account.Username)
 	check(err)
 	for _, canvas := range canvases {
-		fmt.Println(canvas)
+		url := cli.Client.JoinWebUrl(canvas.WebName())
+		fmt.Printf("%-20.20s # %s\n", canvas.Title(), url)
 	}
 }
 
