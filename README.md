@@ -1,8 +1,8 @@
 # Canvas CLI
 
 Usage:
-	canvas new       [<filename>]
-	canvas list      [--collection]
+	canvas new [<filename>]
+	canvas list [--collection]
 	canvas pull <id> [-f | --format=<format>]
 	canvas account
 	canvas login

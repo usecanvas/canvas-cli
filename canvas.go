@@ -6,7 +6,7 @@ type Canvas struct {
 	Name       string `json:"name"`
 	Collection string `json:"collection"`
 	URL        string
-	Share      ShareData `json:"data"`
+	Data       ShareData
 }
 
 type ShareData struct {
@@ -28,7 +28,7 @@ func (c *Canvas) WebName() string {
 }
 
 func (c *Canvas) Body() string {
-	return c.Share.Data
+	return c.Data.Data
 }
 
 func (c *Canvas) Title() (title string) {

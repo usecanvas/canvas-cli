@@ -9,8 +9,8 @@ import (
 
 var usage = `Canvas CLI 0.0.1
 Usage:
-	canvas new       [<filename>]
-	canvas list      [--collection]
+	canvas new [<filename>]
+	canvas list [--collection]
 	canvas pull <id> [-f | --format=<format>]
 	canvas account
 	canvas login
@@ -41,7 +41,12 @@ func main() {
 
 	switch {
 	case args["new"].(bool):
-		cli.NewCanvas()
+		switch path := args["<filename>"].(type) {
+		case string:
+			cli.NewCanvas(path)
+		case nil:
+			cli.BlankCanvas()
+		}
 	case args["account"].(bool):
 		cli.WhoAmI()
 	case args["list"].(bool):

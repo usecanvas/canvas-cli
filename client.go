@@ -55,8 +55,8 @@ func (c *Client) TokenLogin(auth Login) (token AuthToken, err error) {
 	//build auth body
 	authJson, err := json.Marshal(auth)
 	check(err)
-
 	body := string(authJson)
+
 	request := gorequest.New()
 	resp, body, errs := request.Post(c.Url("tokens")).
 		Type("json").
@@ -96,16 +96,22 @@ func (c *Client) FetchAccount() (account Account, err error) {
 }
 
 //Create a new canvas
-func (c *Client) NewCanvas(collection string) (canvas Canvas, err error) {
+func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err error) {
 	request := gorequest.New()
 	newCanvasUrl := c.Url("canvases/" + collection)
-	resp, body, errs := request.Post(newCanvasUrl).
-		Set("Authorization", "Bearer "+c.Auth.Token).
-		End()
+	postBody, err := json.Marshal(ShareData{Data: data})
+	check(err)
+
+	agent := request.Post(newCanvasUrl).
+		Type("json").
+		Send(string(postBody)).
+		Set("Accept", "application/json").
+		Set("Authorization", "Bearer "+c.Auth.Token)
+
+	resp, body, errs := agent.End()
 
 	if errs != nil {
-		err = errs[0]
-		return
+		check(errs[0])
 	}
 
 	switch resp.StatusCode {
@@ -164,6 +170,7 @@ func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 func (c *Client) get(path string) (agent *gorequest.SuperAgent) {
 	agent = gorequest.New()
 	agent.Get(path).
+		Set("Accept", "application/json").
 		Set("Authorization", "Bearer "+c.Auth.Token)
 
 	return agent
