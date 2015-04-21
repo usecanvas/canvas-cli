@@ -27,14 +27,20 @@ func NewCLI() (cli *CLI) {
 	return
 }
 
-func (cli *CLI) BlankCanvas() {
-	canvas, err := cli.Client.NewCanvas(cli.Account.Username, "")
+func (cli *CLI) NewCanvas() {
+	body := ""
+	if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+		bytes, err := ioutil.ReadAll(os.Stdin)
+		check(err)
+		body = string(bytes)
+	}
+	canvas, err := cli.Client.NewCanvas(cli.Account.Username, body)
 	check(err)
 	canvas.URL = cli.Client.JoinWebUrl(canvas.WebName())
 	fmt.Println(canvas.URL)
 }
 
-func (cli *CLI) NewCanvas(filepath string) {
+func (cli *CLI) NewCanvasPath(filepath string) {
 	fileExists, err := exists(filepath)
 	check(err)
 

@@ -43,9 +43,9 @@ func main() {
 	case args["new"].(bool):
 		switch path := args["<filename>"].(type) {
 		case string:
-			cli.NewCanvas(path)
+			cli.NewCanvasPath(path)
 		case nil:
-			cli.BlankCanvas()
+			cli.NewCanvas()
 		}
 	case args["account"].(bool):
 		cli.WhoAmI()
