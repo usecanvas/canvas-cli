@@ -107,6 +107,7 @@ func (cli *CLI) Login() {
 
 	cli.Client.Auth = token
 	cli.save()
+	fmt.Println("Success!")
 }
 
 //use stored token or initiate login

@@ -18,6 +18,8 @@ Options:
 
 ## Installation
 
+  OS X: [Canvas 0.0.1](https://s3.amazonaws.com/canvas-cli-releases/canvas-0.0.1.zip)
+
 
 ## Build
 
