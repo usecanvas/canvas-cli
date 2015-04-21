@@ -37,8 +37,8 @@ var contentJSON = "application/json"
 
 func NewClient() *Client {
 	client := Client{
-		ApiUrl: "http://localhost:5001/",
-		WebUrl: "http://localhost:5000/",
+		ApiUrl: "https://api.usecanvas.com/",
+		WebUrl: "https://beta.usecanvas.com/",
 	}
 	url := os.Getenv("CANVAS_API_URL")
 	if url != "" {
