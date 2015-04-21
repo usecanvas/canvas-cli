@@ -1,5 +1,5 @@
 {
-	"ImportPath": "github.com/usecanvas/canvas-cli",
+	"ImportPath": "github.com/usecanvas/canvas",
 	"GoVersion": "go1.3",
 	"Deps": [
 		{
