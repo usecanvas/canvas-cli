@@ -70,8 +70,14 @@ func (cli *CLI) PullCanvas(id string) {
 	fmt.Println(canvas.Body())
 }
 
-func (cli *CLI) ListCanvases() {
-	canvases, err := cli.Client.GetCanvases(cli.Account.Username)
+func (cli *CLI) DeleteCanvas(id string) {
+	err := cli.Client.DeleteCanvas(cli.Account.Username, id)
+	check(err)
+	fmt.Println("Deleted: ", id)
+}
+
+func (cli *CLI) ListCanvases(collection string) {
+	canvases, err := cli.Client.GetCanvases(collection)
 	check(err)
 	for _, canvas := range canvases {
 		url := cli.Client.JoinWebUrl(canvas.WebName())

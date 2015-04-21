@@ -167,9 +167,39 @@ func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 	return
 }
 
+func (c *Client) DeleteCanvas(collection string, name string) (err error) {
+	canvasUrl := c.Url("canvases/" + collection + "/" + name)
+	agent := c.del(canvasUrl)
+	resp, _, errs := agent.End()
+
+	if errs != nil {
+		err = errs[0]
+		return
+	}
+
+	switch resp.StatusCode {
+	case 204:
+		err = nil
+	case 404:
+		err = errors.New("Not found")
+	default:
+		err = errors.New("Delete Canvas Failed")
+	}
+	return
+}
+
 func (c *Client) get(path string) (agent *gorequest.SuperAgent) {
 	agent = gorequest.New()
 	agent.Get(path).
+		Set("Accept", "application/json").
+		Set("Authorization", "Bearer "+c.Auth.Token)
+
+	return agent
+}
+
+func (c *Client) del(path string) (agent *gorequest.SuperAgent) {
+	agent = gorequest.New()
+	agent.Delete(path).
 		Set("Accept", "application/json").
 		Set("Authorization", "Bearer "+c.Auth.Token)
 

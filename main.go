@@ -1,28 +1,33 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
 	"github.com/docopt/docopt-go"
 )
 
-var usage = `Canvas CLI 0.0.1
+var usage = `
 Usage:
 	canvas new [<filename>]
-	canvas list [--collection]
-	canvas pull <id> [-f | --format=<format>]
+	canvas list
+	canvas pull <id>
+	canvas delete <id>
 	canvas account
 	canvas login
 	canvas -h | --help
 	canvas --version
 
 Options:
-  -h, --help             Show this screen.
-  --version              Show version.
-  --collection           Document collection (defaults to current user).
-  -f, --format <format>  Format: md, json, or git
+  -h, --help    Show this screen.
+  --version     Show version.
 `
+
+//TODO:
+// --collection  Document collection (defaults to current user).
+// [--format=<format>]
+//  --format      Format: md, json, or git
 
 //unified error handler
 func check(e error) {
@@ -37,8 +42,11 @@ func check(e error) {
 //with the user submitted arguments
 func main() {
 	args, _ := docopt.Parse(usage, nil, true, "Canvas CLI 0.1", false)
-	cli := NewCLI()
+	if len(args) == 0 {
+		check(errors.New("Could not parse command line options"))
+	}
 
+	cli := NewCLI()
 	switch {
 	case args["new"].(bool):
 		switch path := args["<filename>"].(type) {
@@ -47,13 +55,15 @@ func main() {
 		case nil:
 			cli.NewCanvas()
 		}
-	case args["account"].(bool):
-		cli.WhoAmI()
 	case args["list"].(bool):
-		cli.ListCanvases()
-	case args["login"].(bool):
-		cli.Login()
+		cli.ListCanvases(cli.Account.Username)
 	case args["pull"].(bool):
 		cli.PullCanvas(args["<id>"].(string))
+	case args["delete"].(bool):
+		cli.DeleteCanvas(args["<id>"].(string))
+	case args["account"].(bool):
+		cli.WhoAmI()
+	case args["login"].(bool):
+		cli.Login()
 	}
 }
