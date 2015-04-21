@@ -97,17 +97,11 @@ func (c *Client) FetchAccount() (account Account, err error) {
 
 //Create a new canvas
 func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err error) {
-	request := gorequest.New()
 	newCanvasUrl := c.Url("canvases/" + collection)
 	postBody, err := json.Marshal(ShareData{Data: data})
 	check(err)
 
-	agent := request.Post(newCanvasUrl).
-		Type("json").
-		Send(string(postBody)).
-		Set("Accept", "application/json").
-		Set("Authorization", "Bearer "+c.Auth.Token)
-
+	agent := c.post(newCanvasUrl).Send(string(postBody))
 	resp, body, errs := agent.End()
 
 	if errs != nil {
@@ -186,6 +180,16 @@ func (c *Client) DeleteCanvas(collection string, name string) (err error) {
 		err = errors.New("Delete Canvas Failed")
 	}
 	return
+}
+
+func (c *Client) post(path string) (agent *gorequest.SuperAgent) {
+	agent = gorequest.New()
+	agent.Post(path).
+		Type("json").
+		Set("Accept", "application/json").
+		Set("Authorization", "Bearer "+c.Auth.Token)
+
+	return agent
 }
 
 func (c *Client) get(path string) (agent *gorequest.SuperAgent) {
