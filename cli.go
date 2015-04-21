@@ -29,6 +29,7 @@ func NewCLI() (cli *CLI) {
 
 func (cli *CLI) NewCanvas() {
 	body := ""
+	// read from STDIN if not a terminal
 	if !terminal.IsTerminal(int(os.Stdin.Fd())) {
 		bytes, err := ioutil.ReadAll(os.Stdin)
 		check(err)
