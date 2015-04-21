@@ -1,21 +1,28 @@
 # Canvas CLI
 
+```bash
 Usage:
 	canvas new [<filename>]
-	canvas list [--collection]
-	canvas pull <id> [-f | --format=<format>]
+	canvas list
+	canvas pull <id>
+	canvas delete <id>
 	canvas account
 	canvas login
 	canvas -h | --help
 	canvas --version
 
 Options:
-  -h, --help             Show this screen.
-  --version              Show version.
-  --collection           Document collection (defaults to current user).
-  -f, --format <format>  Format: md, json, or git
+  -h, --help    Show this screen.
+  --version     Show version.
+```
 
 ## Installation
 
-download and compile it or run it with go run :)
 
+## Build
+
+    ./build.sh
+
+## Development
+
+    go run *.go
