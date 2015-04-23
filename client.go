@@ -141,8 +141,7 @@ func (c *Client) GetCanvas(collection string, name string) (canvas Canvas, err e
 
 func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 	canvasesUrl := c.Url("canvases/" + collection)
-	agent := c.get(canvasesUrl)
-	resp, body, errs := agent.End()
+	resp, body, errs := c.get(canvasesUrl).End()
 
 	if errs != nil {
 		err = errs[0]

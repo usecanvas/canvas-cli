@@ -82,6 +82,9 @@ func (cli *CLI) DeleteCanvas(id string) {
 
 func (cli *CLI) ListCanvases(collection string) {
 	cli.doAuth()
+	if collection == "" {
+		collection = cli.Account.Username
+	}
 	canvases, err := cli.Client.GetCanvases(collection)
 	check(err)
 	for _, canvas := range canvases {

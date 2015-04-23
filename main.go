@@ -57,7 +57,7 @@ func main() {
 			cli.NewCanvas()
 		}
 	case args["list"].(bool):
-		cli.ListCanvases(cli.Account.Username)
+		cli.ListCanvases("")
 	case args["pull"].(bool):
 		cli.PullCanvas(args["<id>"].(string))
 	case args["delete"].(bool):
