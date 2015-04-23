@@ -16,6 +16,7 @@ Usage:
 	canvas delete <id>
 	canvas account
 	canvas login
+	canvas env
 	canvas -h | --help
 	canvas --version
 
@@ -65,5 +66,7 @@ func main() {
 		cli.WhoAmI()
 	case args["login"].(bool):
 		cli.Login()
+	case args["env"].(bool):
+		cli.Env()
 	}
 }

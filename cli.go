@@ -23,11 +23,11 @@ var authTokenFile = "auth-token.json"
 func NewCLI() (cli *CLI) {
 	client := NewClient()
 	cli = &CLI{Client: *client}
-	cli.doAuth()
 	return
 }
 
 func (cli *CLI) NewCanvas() {
+	cli.doAuth()
 	body := ""
 	// read from STDIN if not a terminal
 	if !terminal.IsTerminal(int(os.Stdin.Fd())) {
@@ -42,6 +42,7 @@ func (cli *CLI) NewCanvas() {
 }
 
 func (cli *CLI) NewCanvasPath(filepath string) {
+	cli.doAuth()
 	fileExists, err := exists(filepath)
 	check(err)
 
@@ -59,30 +60,48 @@ func (cli *CLI) NewCanvasPath(filepath string) {
 }
 
 func (cli *CLI) WhoAmI() {
+	cli.doAuth()
 	account := cli.Account
 	fmt.Println("Username: ", account.Username)
 	fmt.Println("Email:    ", account.Email)
 }
 
 func (cli *CLI) PullCanvas(id string) {
+	cli.doAuth()
 	canvas, err := cli.Client.GetCanvas(cli.Account.Username, id)
 	check(err)
 	fmt.Println(canvas.Body())
 }
 
 func (cli *CLI) DeleteCanvas(id string) {
+	cli.doAuth()
 	err := cli.Client.DeleteCanvas(cli.Account.Username, id)
 	check(err)
 	fmt.Println("Deleted: ", id)
 }
 
 func (cli *CLI) ListCanvases(collection string) {
+	cli.doAuth()
 	canvases, err := cli.Client.GetCanvases(collection)
 	check(err)
 	for _, canvas := range canvases {
 		url := cli.Client.JoinWebUrl(canvas.WebName())
 		fmt.Printf("%-20.20s # %s\n", canvas.Title(), url)
 	}
+}
+
+//display configuration info about env.
+func (cli *CLI) Env() {
+	authTokenPath := home(authTokenFile)
+	authTokenExists, err := exists(authTokenPath)
+	check(err)
+	if authTokenExists {
+		fmt.Println("Auth token exists at:", authTokenPath)
+	} else {
+		fmt.Println("No auth token", authTokenPath)
+	}
+	fmt.Println("Canvas API Url:", cli.Client.ApiUrl)
+	fmt.Println("Canvas Web Url:", cli.Client.WebUrl)
 }
 
 //Prompt user for login and auth with
