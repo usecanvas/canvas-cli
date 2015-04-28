@@ -8,6 +8,7 @@ import (
 	"github.com/docopt/docopt-go"
 )
 
+var version = "0.0.2"
 var usage = `
 Usage:
 	canvas new [<filename>]
@@ -42,7 +43,7 @@ func check(e error) {
 //calls the appropriate method in the CLI class
 //with the user submitted arguments
 func main() {
-	args, _ := docopt.Parse(usage, nil, true, "Canvas CLI 0.1", false)
+	args, _ := docopt.Parse(usage, nil, true, "Canvas CLI "+version, false)
 	if len(args) == 0 {
 		check(errors.New("Could not parse command line options"))
 	}
