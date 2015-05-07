@@ -174,7 +174,7 @@ func (cli *CLI) save() {
 
 	authTokenPath := home(authTokenFile)
 	authTokenJson, _ := json.Marshal(cli.Client.Auth)
-	err = ioutil.WriteFile(authTokenPath, authTokenJson, 0644)
+	err = ioutil.WriteFile(authTokenPath, authTokenJson, 0600)
 	check(err)
 }
 
