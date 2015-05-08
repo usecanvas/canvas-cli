@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"strings"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -110,7 +111,7 @@ func (cli *CLI) Env() {
 //Prompt user for login and auth with
 //acquire auth token
 func (cli *CLI) Login() {
-	//get username
+	//get username or password
 	var identity string
 	fmt.Fprintf(os.Stderr, "Please enter your username or email: ")
 	_, err := fmt.Scanln(&identity)
@@ -123,8 +124,15 @@ func (cli *CLI) Login() {
 	check(err)
 	password := string(pass)
 
-	auth := Login{identity, password}
-	token, err := cli.Client.TokenLogin(auth)
+	//determine if given username or password
+	var auth User
+	if strings.ContainsRune(identity, '@') {
+		auth = User{Email: identity, Password: password}
+	} else {
+		auth = User{Username: identity, Password: password}
+	}
+
+	token, err := cli.Client.UserLogin(auth)
 	check(err)
 
 	cli.Client.Auth = token
