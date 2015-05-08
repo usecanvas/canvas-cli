@@ -78,7 +78,11 @@ func (c *Client) UserLogin(auth User) (token AuthToken, err error) {
 
 	switch resp.StatusCode {
 	case 201:
-		err = json.Unmarshal([]byte(body), &token)
+		var resp struct {
+			AuthToken `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		token = resp.AuthToken
 	default:
 		err = decodeError(body)
 	}

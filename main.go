@@ -34,7 +34,7 @@ Options:
 //unified error handler
 func check(e error) {
 	if e != nil {
-		fmt.Println(e)
+		fmt.Println("Error:", e)
 		os.Exit(1)
 	}
 }
@@ -67,6 +67,7 @@ func main() {
 		cli.WhoAmI()
 	case args["login"].(bool):
 		cli.Login()
+		fmt.Println("Success!")
 	case args["env"].(bool):
 		cli.Env()
 	}
