@@ -126,7 +126,20 @@ func (cli *CLI) Env() {
 
 //Prompt user for login and auth with
 //acquire auth token
-func (cli *CLI) Login() {
+func (cli *CLI) RefreshLogin() (err error) {
+	refreshToken := RefreshToken{Id: cli.Client.Auth.RefreshToken}
+	token, err := cli.Client.RefreshTokenLogin(refreshToken)
+	if err != nil {
+		return
+	}
+
+	cli.Client.Auth = token
+	return
+}
+
+//Prompt user for login and auth with
+//acquire auth token
+func (cli *CLI) UserLogin() {
 	//get username or password
 	var identity string
 	fmt.Fprintf(os.Stderr, "Please enter your username or email: ")
@@ -152,8 +165,6 @@ func (cli *CLI) Login() {
 	check(err)
 
 	cli.Client.Auth = token
-	cli.save()
-	fmt.Println("Success!")
 }
 
 //use stored token or initiate login
@@ -170,20 +181,21 @@ func (cli *CLI) doAuth() {
 		err = json.Unmarshal(authTokenJson, &token)
 		check(err)
 		cli.Client.Auth = token
+		err = cli.RefreshLogin()
+		if err != nil {
+			cli.UserLogin()
+		}
 	} else {
-		cli.Login()
+		cli.UserLogin()
 	}
+	//we've acquired a token! save it
+	cli.save()
 
 	//TODO: maybe convert to error checking
 	var account Account
 	account, err = cli.Client.FetchAccount()
-	if err != nil {
-		cli.Login()
-		cli.doAuth()
-	} else {
-		cli.Account = account
-		cli.save()
-	}
+	check(err)
+	cli.Account = account
 }
 
 // save login to `~/.canvas/auth-token.json`
