@@ -99,7 +99,11 @@ func (c *Client) FetchAccount() (account Account, err error) {
 
 	switch resp.StatusCode {
 	case 200:
-		err = json.Unmarshal([]byte(body), &account)
+		var resp struct {
+			Account `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		account = resp.Account
 	default:
 		err = decodeError(body)
 	}
@@ -148,6 +152,28 @@ func (c *Client) GetCanvas(collection string, name string) (canvas Canvas, err e
 	return
 }
 
+func (c *Client) GetCollections() (collections []Collection, err error) {
+	canvasesUrl := c.Url("collections")
+	resp, body, errs := c.get(canvasesUrl).End()
+
+	if errs != nil {
+		err = errs[0]
+		return
+	}
+
+	switch resp.StatusCode {
+	case 200:
+		var resp struct {
+			Collections []Collection `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		collections = resp.Collections
+	default:
+		err = decodeError(body)
+	}
+	return
+}
+
 func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 	canvasesUrl := c.Url("canvases/" + collection)
 	resp, body, errs := c.get(canvasesUrl).End()
@@ -159,9 +185,25 @@ func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 
 	switch resp.StatusCode {
 	case 200:
-		err = json.Unmarshal([]byte(body), &canvases)
+		var resp struct {
+			Canvases []Canvas `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		canvases = resp.Canvases
 	default:
 		err = decodeError(body)
+	}
+
+	// map out the collection names.
+	// TODO: get the client to return this
+	collections, err := c.GetCollections()
+	check(err)
+	cMap := make(map[string]string)
+	for _, collection := range collections {
+		cMap[collection.Id] = collection.Name
+	}
+	for i, c := range canvases {
+		canvases[i].CollectionName = cMap[c.CollectionId]
 	}
 
 	return

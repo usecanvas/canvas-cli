@@ -3,10 +3,11 @@ package main
 import "regexp"
 
 type Canvas struct {
-	Name       string `json:"name"`
-	Collection string `json:"collection"`
-	URL        string
-	Data       ShareData
+	Id             string `json:"id"`
+	CollectionId   string `json:"collection_id"`
+	CollectionName string `json:"collection_name"`
+	URL            string
+	Data           ShareData
 }
 
 type ShareData struct {
@@ -24,7 +25,7 @@ type ModTime struct {
 var titleRegexp = regexp.MustCompile(`^# ([^\n])+`)
 
 func (c *Canvas) WebName() string {
-	return c.Collection + "/-/" + c.Name
+	return c.CollectionName + "/-/" + c.Id
 }
 
 func (c *Canvas) Body() string {
