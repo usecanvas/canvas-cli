@@ -79,7 +79,7 @@ func main() {
 	case args["account"].(bool):
 		cli.WhoAmI()
 	case args["login"].(bool):
-		cli.Login()
+		cli.UserLogin()
 		fmt.Println("Success!")
 	case args["env"].(bool):
 		cli.Env()

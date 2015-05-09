@@ -17,8 +17,8 @@ type AuthToken struct {
 	Token        string `json:"token"`
 }
 
-type UserResource struct {
-	User `json:"user"`
+type RefreshToken struct {
+	Id string `json:"id"`
 }
 
 type User struct {
@@ -60,8 +60,47 @@ func NewClient() *Client {
 	return &client
 }
 
-func (c *Client) UserLogin(auth User) (token AuthToken, err error) {
-	payload := &ApiPayload{Data: &UserResource{auth}}
+func (c *Client) RefreshTokenLogin(refreshToken RefreshToken) (token AuthToken, err error) {
+
+	var tokenData struct {
+		RefreshToken `json:"refresh_token"`
+	}
+	tokenData.RefreshToken = refreshToken
+	payload := &ApiPayload{Data: &tokenData}
+	//build auth body
+	authJson, err := json.Marshal(payload)
+	check(err)
+	reqBody := string(authJson)
+
+	request := gorequest.New()
+	resp, body, errs := request.Post(c.Url("tokens")).
+		Type("json").
+		Send(reqBody).
+		End()
+
+	if errs != nil {
+		check(errs[0])
+	}
+
+	switch resp.StatusCode {
+	case 201:
+		var resp struct {
+			AuthToken `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		token = resp.AuthToken
+	default:
+		err = decodeError(body)
+	}
+	return
+}
+
+func (c *Client) UserLogin(user User) (token AuthToken, err error) {
+	var userData struct {
+		User `json:"user"`
+	}
+	userData.User = user
+	payload := &ApiPayload{Data: &userData}
 	//build auth body
 	authJson, err := json.Marshal(payload)
 	check(err)
