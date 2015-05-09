@@ -69,7 +69,7 @@ func (cli *CLI) WhoAmI() {
 
 func (cli *CLI) PullCanvas(id string) {
 	cli.doAuth()
-	canvas, err := cli.Client.GetCanvas(cli.Account.Username, id)
+	canvas, err := cli.Client.GetCanvas(id)
 	check(err)
 	fmt.Println(canvas.Body())
 }
@@ -86,7 +86,19 @@ func (cli *CLI) ListCanvases(collection string) {
 	canvases, err := cli.Client.GetCanvases(collection)
 	check(err)
 
+	//TODO: have API return collection names
+	collections, err := cli.Client.GetCollections()
+	check(err)
+
+	//make a map of canvas id to name
+	cMap := make(map[string]string)
+	for _, collection := range collections {
+		cMap[collection.Id] = collection.Name
+	}
+
 	for _, canvas := range canvases {
+		//pull in collectionName
+		canvas.CollectionName = cMap[canvas.CollectionId]
 		url := cli.Client.JoinWebUrl(canvas.WebName())
 		fmt.Printf("%-20.20s # %s\n", canvas.Title(), url)
 	}

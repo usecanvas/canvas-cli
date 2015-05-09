@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
 
 	"github.com/parnurzeal/gorequest"
@@ -110,10 +111,37 @@ func (c *Client) FetchAccount() (account Account, err error) {
 	return
 }
 
+func (c *Client) CollectionNameToId() (cMap map[string]string) {
+	collections, err := c.GetCollections()
+	check(err)
+
+	//make a map of canvas id to name
+	cMap = make(map[string]string)
+	for _, collection := range collections {
+		cMap[collection.Name] = collection.Id
+	}
+
+	return
+}
+
 //Create a new canvas
 func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err error) {
-	newCanvasUrl := c.Url("canvases/" + collection)
-	postBody, err := json.Marshal(ShareData{Data: data})
+	newCanvasUrl := c.Url("canvases")
+	var postData struct {
+		Collection `json:"collection"`
+		Text       string `json:"text"`
+	}
+	// figure out the collection id from the name
+	cMap := c.CollectionNameToId()
+	if cMap[collection] == "" {
+		err = errors.New("Collection <" + collection + "> not found")
+		return
+	}
+
+	//set and serialize the post body
+	postData.Collection.Id = cMap[collection]
+	postData.Text = data
+	postBody, err := json.Marshal(ApiPayload{Data: &postData})
 	check(err)
 
 	agent := c.post(newCanvasUrl).Send(string(postBody))
@@ -125,7 +153,12 @@ func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err e
 
 	switch resp.StatusCode {
 	case 201:
-		err = json.Unmarshal([]byte(body), &canvas)
+		var resp struct {
+			Canvas `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		canvas = resp.Canvas
+		canvas.CollectionName = collection
 	default:
 		err = decodeError(body)
 	}
@@ -133,8 +166,9 @@ func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err e
 	return
 }
 
-func (c *Client) GetCanvas(collection string, name string) (canvas Canvas, err error) {
-	canvasUrl := c.Url("canvases/" + collection + "/" + name)
+//Get canvas by id
+func (c *Client) GetCanvas(id string) (canvas Canvas, err error) {
+	canvasUrl := c.Url("canvas/" + id)
 	agent := c.get(canvasUrl)
 	resp, body, errs := agent.End()
 
@@ -146,6 +180,8 @@ func (c *Client) GetCanvas(collection string, name string) (canvas Canvas, err e
 	switch resp.StatusCode {
 	case 200:
 		err = json.Unmarshal([]byte(body), &canvas)
+	case 404:
+		err = errors.New("Canvas not found")
 	default:
 		err = decodeError(body)
 	}
@@ -192,18 +228,6 @@ func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 		canvases = resp.Canvases
 	default:
 		err = decodeError(body)
-	}
-
-	// map out the collection names.
-	// TODO: get the client to return this
-	collections, err := c.GetCollections()
-	check(err)
-	cMap := make(map[string]string)
-	for _, collection := range collections {
-		cMap[collection.Id] = collection.Name
-	}
-	for i, c := range canvases {
-		canvases[i].CollectionName = cMap[c.CollectionId]
 	}
 
 	return
