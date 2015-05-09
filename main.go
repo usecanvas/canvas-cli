@@ -11,10 +11,9 @@ import (
 var version = "0.0.2"
 var usage = `
 Usage:
-	canvas new [<filename>]
+	canvas new [<filename>] [--collection=COLLECTION]
 	canvas list
-	canvas pull <id>
-	canvas delete <id>
+	canvas pull <id> [--format=(md|html|json) [default: md]]
 	canvas account
 	canvas login
 	canvas env
@@ -27,14 +26,12 @@ Options:
 `
 
 //TODO:
-// --collection  Document collection (defaults to current user).
-// [--format=<format>]
-//  --format      Format: md, json, or git
+// canvas delete <id>
 
 //unified error handler
 func check(e error) {
 	if e != nil {
-		fmt.Println(e)
+		fmt.Println("Error:", e)
 		os.Exit(1)
 	}
 }
@@ -51,22 +48,39 @@ func main() {
 	cli := NewCLI()
 	switch {
 	case args["new"].(bool):
+		// note: do don't know the Username until we've authed
+		// and for now auth is the sole domain of the Cli struct
+		var collection string
+		switch c := args["--collection"].(type) {
+		case string:
+			collection = c
+		}
+
 		switch path := args["<filename>"].(type) {
 		case string:
-			cli.NewCanvasPath(path)
+			cli.NewCanvasPath(collection, path)
 		case nil:
-			cli.NewCanvas()
+			cli.NewCanvas(collection)
 		}
 	case args["list"].(bool):
 		cli.ListCanvases("")
 	case args["pull"].(bool):
-		cli.PullCanvas(args["<id>"].(string))
+		var format string
+		switch f := args["--format"].(type) {
+		case string:
+			format = f
+		case nil:
+			format = "md"
+		}
+
+		cli.PullCanvas(args["<id>"].(string), format)
 	case args["delete"].(bool):
 		cli.DeleteCanvas(args["<id>"].(string))
 	case args["account"].(bool):
 		cli.WhoAmI()
 	case args["login"].(bool):
 		cli.Login()
+		fmt.Println("Success!")
 	case args["env"].(bool):
 		cli.Env()
 	}

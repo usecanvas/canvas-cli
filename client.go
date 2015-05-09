@@ -8,13 +8,22 @@ import (
 	"github.com/parnurzeal/gorequest"
 )
 
+type ApiPayload struct {
+	Data interface{} `json:"data"`
+}
+
 type AuthToken struct {
 	RefreshToken string `json:"refresh_token"`
 	Token        string `json:"token"`
 }
 
-type Login struct {
-	Identity string `json:"identity"`
+type UserResource struct {
+	User `json:"user"`
+}
+
+type User struct {
+	Username string `json:"username"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
@@ -51,16 +60,17 @@ func NewClient() *Client {
 	return &client
 }
 
-func (c *Client) TokenLogin(auth Login) (token AuthToken, err error) {
+func (c *Client) UserLogin(auth User) (token AuthToken, err error) {
+	payload := &ApiPayload{Data: &UserResource{auth}}
 	//build auth body
-	authJson, err := json.Marshal(auth)
+	authJson, err := json.Marshal(payload)
 	check(err)
-	body := string(authJson)
+	reqBody := string(authJson)
 
 	request := gorequest.New()
 	resp, body, errs := request.Post(c.Url("tokens")).
 		Type("json").
-		Send(body).
+		Send(reqBody).
 		End()
 
 	if errs != nil {
@@ -69,9 +79,13 @@ func (c *Client) TokenLogin(auth Login) (token AuthToken, err error) {
 
 	switch resp.StatusCode {
 	case 201:
-		err = json.Unmarshal([]byte(body), &token)
+		var resp struct {
+			AuthToken `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		token = resp.AuthToken
 	default:
-		err = errors.New("Login not valid")
+		err = decodeError(body)
 	}
 	return
 }
@@ -85,20 +99,49 @@ func (c *Client) FetchAccount() (account Account, err error) {
 	}
 
 	switch resp.StatusCode {
-	case 404:
-		err = errors.New("Account not found")
-	case 401, 403:
-		err = errors.New("Login invalid")
 	case 200:
-		err = json.Unmarshal([]byte(body), &account)
+		var resp struct {
+			Account `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		account = resp.Account
+	default:
+		err = decodeError(body)
 	}
+	return
+}
+
+func (c *Client) CollectionNameToId() (cMap map[string]string) {
+	collections, err := c.GetCollections()
+	check(err)
+
+	//make a map of canvas id to name
+	cMap = make(map[string]string)
+	for _, collection := range collections {
+		cMap[collection.Name] = collection.Id
+	}
+
 	return
 }
 
 //Create a new canvas
 func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err error) {
-	newCanvasUrl := c.Url("canvases/" + collection)
-	postBody, err := json.Marshal(ShareData{Data: data})
+	newCanvasUrl := c.Url("canvases")
+	var postData struct {
+		Collection `json:"collection"`
+		Text       string `json:"text"`
+	}
+	// figure out the collection id from the name
+	cMap := c.CollectionNameToId()
+	if cMap[collection] == "" {
+		err = errors.New("Collection \"" + collection + "\" not found")
+		return
+	}
+
+	//set and serialize the post body
+	postData.Collection.Id = cMap[collection]
+	postData.Text = data
+	postBody, err := json.Marshal(ApiPayload{Data: &postData})
 	check(err)
 
 	agent := c.post(newCanvasUrl).Send(string(postBody))
@@ -110,17 +153,36 @@ func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err e
 
 	switch resp.StatusCode {
 	case 201:
-		err = json.Unmarshal([]byte(body), &canvas)
+		var resp struct {
+			Canvas `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		canvas = resp.Canvas
+		canvas.CollectionName = collection
 	default:
-		err = errors.New("New canvas failed")
+		err = decodeError(body)
 	}
 
 	return
 }
 
-func (c *Client) GetCanvas(collection string, name string) (canvas Canvas, err error) {
-	canvasUrl := c.Url("canvases/" + collection + "/" + name)
-	agent := c.get(canvasUrl)
+//Get canvas by id
+func (c *Client) GetCanvas(id string, format string) (canvasText string, err error) {
+	canvasUrl := c.Url("canvas/" + id)
+
+	var mimeType string
+	switch format {
+	case "md":
+		mimeType = "text/plain"
+	case "html":
+		mimeType = "text/html"
+	case "json":
+		mimeType = "application/vnd.canvas.doc"
+	case "":
+		mimeType = "text/plain"
+	}
+
+	agent := c.get(canvasUrl).Set("Accept", mimeType)
 	resp, body, errs := agent.End()
 
 	if errs != nil {
@@ -130,11 +192,33 @@ func (c *Client) GetCanvas(collection string, name string) (canvas Canvas, err e
 
 	switch resp.StatusCode {
 	case 200:
-		err = json.Unmarshal([]byte(body), &canvas)
+		canvasText = body
 	case 404:
-		err = errors.New("Not found")
+		err = errors.New("Canvas not found")
 	default:
-		err = errors.New("Get Canvas Failed")
+		err = decodeError(body)
+	}
+	return
+}
+
+func (c *Client) GetCollections() (collections []Collection, err error) {
+	canvasesUrl := c.Url("collections")
+	resp, body, errs := c.get(canvasesUrl).End()
+
+	if errs != nil {
+		err = errs[0]
+		return
+	}
+
+	switch resp.StatusCode {
+	case 200:
+		var resp struct {
+			Collections []Collection `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		collections = resp.Collections
+	default:
+		err = decodeError(body)
 	}
 	return
 }
@@ -150,11 +234,13 @@ func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 
 	switch resp.StatusCode {
 	case 200:
-		err = json.Unmarshal([]byte(body), &canvases)
-	case 404:
-		err = errors.New("Not found")
+		var resp struct {
+			Canvases []Canvas `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		canvases = resp.Canvases
 	default:
-		err = errors.New("Get Canvases failed")
+		err = decodeError(body)
 	}
 
 	return
@@ -163,7 +249,7 @@ func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 func (c *Client) DeleteCanvas(collection string, name string) (err error) {
 	canvasUrl := c.Url("canvases/" + collection + "/" + name)
 	agent := c.del(canvasUrl)
-	resp, _, errs := agent.End()
+	resp, body, errs := agent.End()
 
 	if errs != nil {
 		err = errs[0]
@@ -173,10 +259,8 @@ func (c *Client) DeleteCanvas(collection string, name string) (err error) {
 	switch resp.StatusCode {
 	case 204:
 		err = nil
-	case 404:
-		err = errors.New("Not found")
 	default:
-		err = errors.New("Delete Canvas Failed")
+		err = decodeError(body)
 	}
 	return
 }
@@ -219,4 +303,11 @@ func (c *Client) JoinWebUrl(path string) string {
 
 func (c *Client) LoggedIn() bool {
 	return c.Auth.Token != ""
+}
+
+func decodeError(body string) error {
+	var errorRes ErrorPayload
+	err := json.Unmarshal([]byte(body), &errorRes)
+	check(err)
+	return errorRes
 }

@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/user"
+	"strings"
 
 	"golang.org/x/crypto/ssh/terminal"
 )
@@ -26,7 +27,7 @@ func NewCLI() (cli *CLI) {
 	return
 }
 
-func (cli *CLI) NewCanvas() {
+func (cli *CLI) NewCanvas(collection string) {
 	cli.doAuth()
 	body := ""
 	// read from STDIN if not a terminal
@@ -35,13 +36,16 @@ func (cli *CLI) NewCanvas() {
 		check(err)
 		body = string(bytes)
 	}
-	canvas, err := cli.Client.NewCanvas(cli.Account.Username, body)
+	if collection == "" {
+		collection = cli.Account.Username
+	}
+	canvas, err := cli.Client.NewCanvas(collection, body)
 	check(err)
 	canvas.URL = cli.Client.JoinWebUrl(canvas.WebName())
 	fmt.Println(canvas.URL)
 }
 
-func (cli *CLI) NewCanvasPath(filepath string) {
+func (cli *CLI) NewCanvasPath(collection string, filepath string) {
 	cli.doAuth()
 	fileExists, err := exists(filepath)
 	check(err)
@@ -53,7 +57,10 @@ func (cli *CLI) NewCanvasPath(filepath string) {
 	body, err := ioutil.ReadFile(filepath)
 	check(err)
 
-	canvas, err := cli.Client.NewCanvas(cli.Account.Username, string(body))
+	if collection == "" {
+		collection = cli.Account.Username
+	}
+	canvas, err := cli.Client.NewCanvas(collection, string(body))
 	check(err)
 	canvas.URL = cli.Client.JoinWebUrl(canvas.WebName())
 	fmt.Println(canvas.URL)
@@ -66,11 +73,11 @@ func (cli *CLI) WhoAmI() {
 	fmt.Println("Email:    ", account.Email)
 }
 
-func (cli *CLI) PullCanvas(id string) {
+func (cli *CLI) PullCanvas(id string, format string) {
 	cli.doAuth()
-	canvas, err := cli.Client.GetCanvas(cli.Account.Username, id)
+	canvasText, err := cli.Client.GetCanvas(id, format)
 	check(err)
-	fmt.Println(canvas.Body())
+	fmt.Println(canvasText)
 }
 
 func (cli *CLI) DeleteCanvas(id string) {
@@ -82,12 +89,22 @@ func (cli *CLI) DeleteCanvas(id string) {
 
 func (cli *CLI) ListCanvases(collection string) {
 	cli.doAuth()
-	if collection == "" {
-		collection = cli.Account.Username
-	}
 	canvases, err := cli.Client.GetCanvases(collection)
 	check(err)
+
+	//TODO: have API return collection names
+	collections, err := cli.Client.GetCollections()
+	check(err)
+
+	//make a map of canvas id to name
+	cMap := make(map[string]string)
+	for _, collection := range collections {
+		cMap[collection.Id] = collection.Name
+	}
+
 	for _, canvas := range canvases {
+		//pull in collectionName
+		canvas.CollectionName = cMap[canvas.CollectionId]
 		url := cli.Client.JoinWebUrl(canvas.WebName())
 		fmt.Printf("%-20.20s # %s\n", canvas.Title(), url)
 	}
@@ -110,7 +127,7 @@ func (cli *CLI) Env() {
 //Prompt user for login and auth with
 //acquire auth token
 func (cli *CLI) Login() {
-	//get username
+	//get username or password
 	var identity string
 	fmt.Fprintf(os.Stderr, "Please enter your username or email: ")
 	_, err := fmt.Scanln(&identity)
@@ -123,8 +140,15 @@ func (cli *CLI) Login() {
 	check(err)
 	password := string(pass)
 
-	auth := Login{identity, password}
-	token, err := cli.Client.TokenLogin(auth)
+	//determine if given username or password
+	var auth User
+	if strings.ContainsRune(identity, '@') {
+		auth = User{Email: identity, Password: password}
+	} else {
+		auth = User{Username: identity, Password: password}
+	}
+
+	token, err := cli.Client.UserLogin(auth)
 	check(err)
 
 	cli.Client.Auth = token
