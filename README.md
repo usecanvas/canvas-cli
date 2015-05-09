@@ -2,12 +2,12 @@
 
 ```bash
 Usage:
-	canvas new [<filename>]
+	canvas new [<filename>] [--collection=COLLECTION]
 	canvas list
-	canvas pull <id>
-	canvas delete <id>
+	canvas pull <id> [--format=(md|html|json) [default: md]]
 	canvas account
 	canvas login
+	canvas env
 	canvas -h | --help
 	canvas --version
 
@@ -18,7 +18,7 @@ Options:
 
 ## Installation
 
-- OS X: [Canvas 0.0.2](https://s3.amazonaws.com/canvas-cli-releases/canvas-0.0.2-OSX.zip)
+Currently using github releases.
 
 ## Usage
 
