@@ -26,8 +26,6 @@ Options:
 `
 
 //TODO:
-// [--format=<format>]
-//  --format      Format: md, json, or git
 // canvas delete <id>
 
 //unified error handler
