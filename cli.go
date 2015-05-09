@@ -87,6 +87,16 @@ func (cli *CLI) DeleteCanvas(id string) {
 	fmt.Println("Deleted: ", id)
 }
 
+func (cli *CLI) ListCollections() {
+	cli.doAuth()
+	collections, err := cli.Client.GetCollections()
+	check(err)
+
+	for _, collection := range collections {
+		fmt.Println(collection.Name)
+	}
+}
+
 func (cli *CLI) ListCanvases(collection string) {
 	cli.doAuth()
 	canvases, err := cli.Client.GetCanvases(collection)
