@@ -74,8 +74,6 @@ func main() {
 		}
 
 		cli.PullCanvas(args["<id>"].(string), format)
-	case args["delete"].(bool):
-		cli.DeleteCanvas(args["<id>"].(string))
 	case args["account"].(bool):
 		cli.WhoAmI()
 	case args["login"].(bool):
