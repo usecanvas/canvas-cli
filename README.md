@@ -18,7 +18,7 @@ Options:
 
 ## Installation
 
-Currently using github releases.
+OS X - Download the binary [using github releases](https://github.com/usecanvas/canvas-cli/releases).
 
 ## Usage
 
