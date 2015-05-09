@@ -134,7 +134,7 @@ func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err e
 	// figure out the collection id from the name
 	cMap := c.CollectionNameToId()
 	if cMap[collection] == "" {
-		err = errors.New("Collection <" + collection + "> not found")
+		err = errors.New("Collection \"" + collection + "\" not found")
 		return
 	}
 
@@ -167,9 +167,22 @@ func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err e
 }
 
 //Get canvas by id
-func (c *Client) GetCanvas(id string) (canvas Canvas, err error) {
+func (c *Client) GetCanvas(id string, format string) (canvasText string, err error) {
 	canvasUrl := c.Url("canvas/" + id)
-	agent := c.get(canvasUrl)
+
+	var mimeType string
+	switch format {
+	case "md":
+		mimeType = "text/plain"
+	case "html":
+		mimeType = "text/html"
+	case "json":
+		mimeType = "application/vnd.canvas.doc"
+	case "":
+		mimeType = "text/plain"
+	}
+
+	agent := c.get(canvasUrl).Set("Accept", mimeType)
 	resp, body, errs := agent.End()
 
 	if errs != nil {
@@ -179,7 +192,7 @@ func (c *Client) GetCanvas(id string) (canvas Canvas, err error) {
 
 	switch resp.StatusCode {
 	case 200:
-		err = json.Unmarshal([]byte(body), &canvas)
+		canvasText = body
 	case 404:
 		err = errors.New("Canvas not found")
 	default:

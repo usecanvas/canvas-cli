@@ -27,7 +27,7 @@ func NewCLI() (cli *CLI) {
 	return
 }
 
-func (cli *CLI) NewCanvas() {
+func (cli *CLI) NewCanvas(collection string) {
 	cli.doAuth()
 	body := ""
 	// read from STDIN if not a terminal
@@ -36,13 +36,16 @@ func (cli *CLI) NewCanvas() {
 		check(err)
 		body = string(bytes)
 	}
-	canvas, err := cli.Client.NewCanvas(cli.Account.Username, body)
+	if collection == "" {
+		collection = cli.Account.Username
+	}
+	canvas, err := cli.Client.NewCanvas(collection, body)
 	check(err)
 	canvas.URL = cli.Client.JoinWebUrl(canvas.WebName())
 	fmt.Println(canvas.URL)
 }
 
-func (cli *CLI) NewCanvasPath(filepath string) {
+func (cli *CLI) NewCanvasPath(collection string, filepath string) {
 	cli.doAuth()
 	fileExists, err := exists(filepath)
 	check(err)
@@ -54,7 +57,10 @@ func (cli *CLI) NewCanvasPath(filepath string) {
 	body, err := ioutil.ReadFile(filepath)
 	check(err)
 
-	canvas, err := cli.Client.NewCanvas(cli.Account.Username, string(body))
+	if collection == "" {
+		collection = cli.Account.Username
+	}
+	canvas, err := cli.Client.NewCanvas(collection, string(body))
 	check(err)
 	canvas.URL = cli.Client.JoinWebUrl(canvas.WebName())
 	fmt.Println(canvas.URL)
@@ -67,11 +73,11 @@ func (cli *CLI) WhoAmI() {
 	fmt.Println("Email:    ", account.Email)
 }
 
-func (cli *CLI) PullCanvas(id string) {
+func (cli *CLI) PullCanvas(id string, format string) {
 	cli.doAuth()
-	canvas, err := cli.Client.GetCanvas(id)
+	canvasText, err := cli.Client.GetCanvas(id, format)
 	check(err)
-	fmt.Println(canvas.Body())
+	fmt.Println(canvasText)
 }
 
 func (cli *CLI) DeleteCanvas(id string) {
