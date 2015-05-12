@@ -3,8 +3,9 @@
 ```bash
 Usage:
 	canvas new [<filename>] [--collection=COLLECTION]
-	canvas list
+	canvas list [--collection=COLLECTION]
 	canvas pull <id> [--md | --json | --html]
+	canvas delete <id>
 	canvas account
 	canvas login
 	canvas env
