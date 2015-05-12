@@ -207,7 +207,7 @@ func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err e
 
 //Get canvas by id
 func (c *Client) GetCanvas(id string, format string) (canvasText string, err error) {
-	canvasUrl := c.Url("canvas/" + id)
+	canvasUrl := c.Url("canvases/" + id)
 
 	var mimeType string
 	switch format {
