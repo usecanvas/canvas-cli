@@ -5,6 +5,10 @@ module CLI
     './canvas'
   end
 
+	def delete(id)
+		`#{CLI.bin} delete #{id}`
+	end
+
   def new_canvas(cmd = nil)
     cmd ||= "#{CLI.bin} new"
     c_url = `#{cmd}`.strip

@@ -285,8 +285,8 @@ func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
 	return
 }
 
-func (c *Client) DeleteCanvas(collection string, name string) (err error) {
-	canvasUrl := c.Url("canvases/" + collection + "/" + name)
+func (c *Client) DeleteCanvas(id string) (err error) {
+	canvasUrl := c.Url("canvases/" + id)
 	agent := c.del(canvasUrl)
 	resp, body, errs := agent.End()
 

@@ -7,9 +7,15 @@ class PullTest < MiniTest::Unit::TestCase
   CJSON = '[{"type":"heading","depth":1,"text":"Hello World!"}]'
 
   def setup
+		super
     @c_url = `echo "#{MD}" | #{CLI.bin} new`.strip
     @c_id  = @c_url.split('/').last
   end
+
+	def teardown
+		super
+		CLI.delete(@c_id)
+	end
 
   def test_pull_with_no_format
     body = `#{CLI.bin} pull #{@c_id}`.strip

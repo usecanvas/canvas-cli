@@ -76,7 +76,7 @@ func (cli *CLI) PullCanvas(id string, format string) {
 
 func (cli *CLI) DeleteCanvas(id string) {
 	cli.doAuth()
-	err := cli.Client.DeleteCanvas(cli.Account.Username, id)
+	err := cli.Client.DeleteCanvas(id)
 	check(err)
 	fmt.Println("Deleted: ", id)
 }
@@ -159,6 +159,7 @@ func (cli *CLI) UserLogin() {
 	check(err)
 
 	cli.Client.Auth = token
+	cli.save()
 }
 
 //use stored token or initiate login

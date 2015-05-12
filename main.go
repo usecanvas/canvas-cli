@@ -14,6 +14,7 @@ Usage:
 	canvas new [<filename>] [--collection=COLLECTION]
 	canvas list
 	canvas pull <id> [--md | --json | --html]
+	canvas delete <id>
 	canvas account
 	canvas login
 	canvas env
@@ -58,6 +59,8 @@ func main() {
 	case args["pull"].(bool):
 		format := decodeFormat(args)
 		cli.PullCanvas(args["<id>"].(string), format)
+	case args["delete"].(bool):
+		cli.DeleteCanvas(args["<id>"].(string))
 	case args["account"].(bool):
 		cli.WhoAmI()
 	case args["login"].(bool):

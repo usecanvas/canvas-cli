@@ -6,5 +6,6 @@ class ListTest < MiniTest::Unit::TestCase
     id = CLI.new_canvas
     output = `#{CLI.bin} list`.strip
     assert_includes(output, id)
+		CLI.delete(id)
   end
 end
