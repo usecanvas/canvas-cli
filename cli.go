@@ -100,7 +100,7 @@ func (cli *CLI) ListCanvases(collection string) {
 		//pull in collectionName
 		canvas.CollectionName = cMap[canvas.CollectionId]
 		url := cli.Client.JoinWebUrl(canvas.WebName())
-		fmt.Printf("%-20.20s # %s\n", canvas.Title(), url)
+		fmt.Printf("%-30.30s # %s\n", canvas.Title(), url)
 	}
 }
 
