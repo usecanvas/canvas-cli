@@ -1,4 +1,4 @@
 #! /usr/bin/env bash
 
-go install
+go build
 ruby test/all.rb

@@ -1,4 +1,5 @@
 require 'minitest/autorun'
+require_relative 'helper'
 
 class PullTest < MiniTest::Unit::TestCase
   HTML  = '<h1 id="hello-world-">Hello World!</h1>'
@@ -6,27 +7,27 @@ class PullTest < MiniTest::Unit::TestCase
   CJSON = '[{"type":"heading","depth":1,"text":"Hello World!"}]'
 
   def setup
-    @c_url = `echo "#{MD}" | canvas new`.strip
+    @c_url = `echo "#{MD}" | #{CLI.bin} new`.strip
     @c_id  = @c_url.split('/').last
   end
 
   def test_pull_with_no_format
-    body = `canvas pull #{@c_id}`.strip
+    body = `#{CLI.bin} pull #{@c_id}`.strip
     assert_equal(MD, body)
   end
 
   def test_pull_with_html_format
-    body = `canvas pull #{@c_id} --html`.strip
+    body = `#{CLI.bin} pull #{@c_id} --html`.strip
     assert_equal(HTML, body)
   end
 
   def test_pull_with_md_format
-    body = `canvas pull #{@c_id} --md`.strip
+    body = `#{CLI.bin} pull #{@c_id} --md`.strip
     assert_equal(MD, body)
   end
 
   def test_pull_with_json_format
-    body = `canvas pull #{@c_id} --json`.strip
+    body = `#{CLI.bin} pull #{@c_id} --json`.strip
     assert_equal(CJSON, body)
   end
 end

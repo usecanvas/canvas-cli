@@ -1,12 +1,17 @@
 module CLI
   extend self
 
-  def new_canvas(cmd = 'canvas new')
+  def bin
+    './canvas'
+  end
+
+  def new_canvas(cmd = nil)
+    cmd ||= "#{CLI.bin} new"
     c_url = `#{cmd}`.strip
     c_url.split('/').last
   end
 
   def pull_canvas(id)
-    `canvas pull #{id}`.strip
+    `./#{self.bin} pull #{id}`.strip
   end
 end

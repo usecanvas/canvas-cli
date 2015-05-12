@@ -1,7 +1,8 @@
 require 'minitest/autorun'
+require_relative 'helper'
 
 class EnvTest < MiniTest::Unit::TestCase
   def test_env
-    `canvas env`.split("\n")
+    `#{CLI.bin} env`.split("\n")
   end
 end
