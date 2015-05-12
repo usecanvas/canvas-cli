@@ -8,7 +8,7 @@ import (
 	"github.com/docopt/docopt-go"
 )
 
-var version = "0.1.1"
+var version = "0.2.0"
 var usage = `
 Usage:
 	canvas new [<filename>] [--collection=COLLECTION]
