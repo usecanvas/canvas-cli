@@ -27,40 +27,34 @@ func NewCLI() (cli *CLI) {
 	return
 }
 
-func (cli *CLI) NewCanvas(collection string) {
+func (cli *CLI) NewCanvas(collection string, filepath string) {
 	cli.doAuth()
-	body := ""
-	// read from STDIN if not a terminal
-	if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+	var body string
+
+	if filepath != "" {
+		//read from file
+		fileExists, err := exists(filepath)
+		check(err)
+		if !fileExists {
+			fmt.Printf("File %s not found", filepath)
+		}
+		bytes, err := ioutil.ReadFile(filepath)
+		check(err)
+		body = string(bytes)
+	} else if !terminal.IsTerminal(int(os.Stdin.Fd())) {
+		// read from STDIN if not a terminal
 		bytes, err := ioutil.ReadAll(os.Stdin)
 		check(err)
 		body = string(bytes)
 	}
+
+	// default collection to username
 	if collection == "" {
 		collection = cli.Account.Username
 	}
+
+	// make the canvas
 	canvas, err := cli.Client.NewCanvas(collection, body)
-	check(err)
-	canvas.URL = cli.Client.JoinWebUrl(canvas.WebName())
-	fmt.Println(canvas.URL)
-}
-
-func (cli *CLI) NewCanvasPath(collection string, filepath string) {
-	cli.doAuth()
-	fileExists, err := exists(filepath)
-	check(err)
-
-	if !fileExists {
-		fmt.Printf("File %s not found", filepath)
-	}
-
-	body, err := ioutil.ReadFile(filepath)
-	check(err)
-
-	if collection == "" {
-		collection = cli.Account.Username
-	}
-	canvas, err := cli.Client.NewCanvas(collection, string(body))
 	check(err)
 	canvas.URL = cli.Client.JoinWebUrl(canvas.WebName())
 	fmt.Println(canvas.URL)

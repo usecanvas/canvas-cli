@@ -4,7 +4,7 @@
 Usage:
 	canvas new [<filename>] [--collection=COLLECTION]
 	canvas list
-	canvas pull <id> [--format=(md|html|json) [default: md]]
+	canvas pull <id> [--md | --json | --html]
 	canvas account
 	canvas login
 	canvas env
@@ -12,6 +12,9 @@ Usage:
 	canvas --version
 
 Options:
+  --md          Format Canvas as markdown
+  --json        Format Canvas as json
+  --html        Format Canvas as html
   -h, --help    Show this screen.
   --version     Show version.
 ```

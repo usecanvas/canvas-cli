@@ -16,17 +16,17 @@ class PullTest < MiniTest::Unit::TestCase
   end
 
   def test_pull_with_html_format
-    body = `canvas pull #{@c_id} --format=html`.strip
+    body = `canvas pull #{@c_id} --html`.strip
     assert_equal(HTML, body)
   end
 
   def test_pull_with_md_format
-    body = `canvas pull #{@c_id} --format=md`.strip
+    body = `canvas pull #{@c_id} --md`.strip
     assert_equal(MD, body)
   end
 
   def test_pull_with_json_format
-    body = `canvas pull #{@c_id} --format=json`.strip
+    body = `canvas pull #{@c_id} --json`.strip
     assert_equal(CJSON, body)
   end
 end

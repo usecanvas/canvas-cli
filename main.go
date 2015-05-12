@@ -8,12 +8,12 @@ import (
 	"github.com/docopt/docopt-go"
 )
 
-var version = "0.1.0"
+var version = "0.1.1"
 var usage = `
 Usage:
 	canvas new [<filename>] [--collection=COLLECTION]
 	canvas list
-	canvas pull <id> [--format=(md|html|json) [default: md]]
+	canvas pull <id> [--md | --json | --html]
 	canvas account
 	canvas login
 	canvas env
@@ -21,6 +21,9 @@ Usage:
 	canvas --version
 
 Options:
+  --md          Format Canvas as markdown
+  --json        Format Canvas as json
+  --html        Format Canvas as html
   -h, --help    Show this screen.
   --version     Show version.
 `
@@ -48,31 +51,12 @@ func main() {
 	cli := NewCLI()
 	switch {
 	case args["new"].(bool):
-		// note: do don't know the Username until we've authed
-		// and for now auth is the sole domain of the Cli struct
-		var collection string
-		switch c := args["--collection"].(type) {
-		case string:
-			collection = c
-		}
-
-		switch path := args["<filename>"].(type) {
-		case string:
-			cli.NewCanvasPath(collection, path)
-		case nil:
-			cli.NewCanvas(collection)
-		}
+		collection, path := decodeNew(args)
+		cli.NewCanvas(collection, path)
 	case args["list"].(bool):
 		cli.ListCanvases("")
 	case args["pull"].(bool):
-		var format string
-		switch f := args["--format"].(type) {
-		case string:
-			format = f
-		case nil:
-			format = "md"
-		}
-
+		format := decodeFormat(args)
 		cli.PullCanvas(args["<id>"].(string), format)
 	case args["account"].(bool):
 		cli.WhoAmI()
@@ -82,4 +66,31 @@ func main() {
 	case args["env"].(bool):
 		cli.Env()
 	}
+}
+
+func decodeFormat(args map[string]interface{}) (format string) {
+	switch {
+	case args["--md"]:
+		format = "md"
+	case args["--json"]:
+		format = "json"
+	case args["--html"]:
+		format = "html"
+	default:
+		format = "md"
+	}
+	return
+}
+
+func decodeNew(args map[string]interface{}) (collection, filename string) {
+	switch c := args["--collection"].(type) {
+	case string:
+		collection = c
+	}
+
+	switch f := args["<filename>"].(type) {
+	case string:
+		filename = f
+	}
+	return
 }
