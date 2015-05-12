@@ -263,8 +263,14 @@ func (c *Client) GetCollections() (collections []Collection, err error) {
 }
 
 func (c *Client) GetCanvases(collection string) (canvases []Canvas, err error) {
-	canvasesUrl := c.Url("canvases/" + collection)
-	resp, body, errs := c.get(canvasesUrl).End()
+	canvasesUrl := c.Url("canvases")
+	agent := c.get(canvasesUrl)
+
+	if collection != "" {
+		agent.Query("filter[collection]=" + collection)
+	}
+
+	resp, body, errs := agent.End()
 
 	if errs != nil {
 		err = errs[0]

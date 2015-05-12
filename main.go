@@ -12,7 +12,7 @@ var version = "0.1.1"
 var usage = `
 Usage:
 	canvas new [<filename>] [--collection=COLLECTION]
-	canvas list
+	canvas list [--collection=COLLECTION]
 	canvas pull <id> [--md | --json | --html]
 	canvas delete <id>
 	canvas account
@@ -52,10 +52,9 @@ func main() {
 	cli := NewCLI()
 	switch {
 	case args["new"].(bool):
-		collection, path := decodeNew(args)
-		cli.NewCanvas(collection, path)
+		cli.NewCanvas(decodeCollection(args), decodeFilename(args))
 	case args["list"].(bool):
-		cli.ListCanvases("")
+		cli.ListCanvases(decodeCollection(args))
 	case args["pull"].(bool):
 		format := decodeFormat(args)
 		cli.PullCanvas(args["<id>"].(string), format)
@@ -85,12 +84,15 @@ func decodeFormat(args map[string]interface{}) (format string) {
 	return
 }
 
-func decodeNew(args map[string]interface{}) (collection, filename string) {
+func decodeCollection(args map[string]interface{}) (collection string) {
 	switch c := args["--collection"].(type) {
 	case string:
 		collection = c
 	}
+	return
+}
 
+func decodeFilename(args map[string]interface{}) (filename string) {
 	switch f := args["<filename>"].(type) {
 	case string:
 		filename = f
