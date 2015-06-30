@@ -21,6 +21,12 @@ type RefreshToken struct {
 	Id string `json:"id"`
 }
 
+type SearchToken struct {
+	ApplicationId string `json:"application_id"`
+	SearchKey     string `json:"search_key"`
+	CollectionId  string
+}
+
 type User struct {
 	Username string `json:"username"`
 	Email    string `json:"email"`
@@ -259,6 +265,46 @@ func (c *Client) GetCollections() (collections []Collection, err error) {
 	default:
 		err = decodeError(body)
 	}
+	return
+}
+
+func (c *Client) GetSearchToken(collection string) (token SearchToken, err error) {
+	searchTokensUrl := c.Url("search-tokens")
+
+	var postData struct {
+		Collection `json:"collection"`
+	}
+
+	// figure out the collection id from the name
+	cMap := c.CollectionNameToId()
+	if cMap[collection] == "" {
+		err = errors.New("Collection \"" + collection + "\" not found")
+		return
+	}
+	//set and serialize the post body
+	postData.Collection.Id = cMap[collection]
+	postBody, err := json.Marshal(ApiPayload{Data: &postData})
+	check(err)
+
+	agent := c.post(searchTokensUrl).Send(string(postBody))
+	resp, body, errs := agent.End()
+
+	if errs != nil {
+		check(errs[0])
+	}
+
+	switch resp.StatusCode {
+	case 201:
+		var resp struct {
+			SearchToken `json:"data"`
+		}
+		err = json.Unmarshal([]byte(body), &resp)
+		token = resp.SearchToken
+		token.CollectionId = cMap[collection]
+	default:
+		err = decodeError(body)
+	}
+
 	return
 }
 
