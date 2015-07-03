@@ -29,10 +29,8 @@ func (cli *CLI) Search(collection string, query string) {
 	results, err := index.Search(query, params)
 	check(err)
 
-	_hits := results.(map[string]interface{})["hits"]
-	hits := _hits.([]interface{})
-	for _, _hit := range hits {
-		hit := _hit.(map[string]interface{})
+	hits := results.Hits
+	for _, hit := range hits {
 		canvas := &Canvas{}
 		canvas.Id = hit["id"].(string)
 		canvas.CollectionName = collection
