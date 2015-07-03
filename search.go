@@ -1,9 +1,12 @@
 package main
 
-import "fmt"
-import "github.com/algolia/algoliasearch-client-go/algoliasearch"
+import (
+	"fmt"
 
-func (cli *CLI) Search(collection string) {
+	"github.com/algolia/algoliasearch-client-go/algoliasearch"
+)
+
+func (cli *CLI) Search(collection string, query string) {
 	cli.doAuth()
 
 	// default collection to username
@@ -23,9 +26,18 @@ func (cli *CLI) Search(collection string) {
 	index := client.InitIndex("canvases")
 	params := make(map[string]interface{})
 	params["facetFilters"] = facet
-  results, err := index.Search("hello", params)
+	results, err := index.Search(query, params)
 	check(err)
 
-	hits := results.(map[string]interface{})["hits"]
-	fmt.Println(hits)
+	_hits := results.(map[string]interface{})["hits"]
+	hits := _hits.([]interface{})
+	for _, _hit := range hits {
+		hit := _hit.(map[string]interface{})
+		canvas := &Canvas{}
+		canvas.Id = hit["id"].(string)
+		canvas.CollectionName = collection
+		title := hit["title"].(string)
+		url := cli.Client.JoinWebUrl(canvas.WebName())
+		fmt.Printf("%-30.30s # %s\n", title, url)
+	}
 }
