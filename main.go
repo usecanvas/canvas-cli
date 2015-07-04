@@ -18,7 +18,7 @@ Usage:
 	canvas login
 	canvas new [<filename>] [--collection=COLLECTION]
 	canvas pull <id> [--md | --json | --html]
-	canvas search <query> [--collection=COLLECTION]
+	canvas search [<query>] [--collection=COLLECTION]
 	canvas -h | --help
 	canvas --version
 
@@ -69,8 +69,12 @@ func main() {
 		format := decodeFormat(args)
 		cli.PullCanvas(args["<id>"].(string), format)
 	case args["search"].(bool):
-		query := args["<query>"].(string)
-		cli.Search(decodeCollection(args), query)
+		if args["<query>"] != nil {
+			query := args["<query>"].(string)
+			cli.SearchUnix(decodeCollection(args), query)
+		} else {
+			cli.SearchInteractive(decodeCollection(args))
+		}
 	}
 }
 
