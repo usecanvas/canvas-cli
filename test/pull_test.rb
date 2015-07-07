@@ -4,7 +4,7 @@ require_relative 'helper'
 class PullTest < MiniTest::Unit::TestCase
   HTML  = '<h1 id="hello-world-">Hello World!</h1>'
   MD    = '# Hello World!'
-  CJSON = '[{"type":"heading","depth":1,"text":"Hello World!"}]'
+  CJSON = '{"type":"canvas","meta":{"tags":[]},"content":[{"type":"heading","content":"Hello World!","meta":{"level":1}}]}'
 
   def setup
 		super

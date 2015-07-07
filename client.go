@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"os"
+	"regexp"
 
 	"github.com/parnurzeal/gorequest"
 )
@@ -169,6 +170,8 @@ func (c *Client) CollectionNameToId() (cMap map[string]string) {
 	return
 }
 
+var doubleNewline = regexp.MustCompile("\n\n")
+
 //Create a new canvas
 func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err error) {
 	newCanvasUrl := c.Url("canvases")
@@ -185,7 +188,7 @@ func (c *Client) NewCanvas(collection string, data string) (canvas Canvas, err e
 
 	//set and serialize the post body
 	postData.Collection.Id = cMap[collection]
-	postData.Text = data
+	postData.Text = doubleNewline.ReplaceAllString(data, "\n")
 	postBody, err := json.Marshal(ApiPayload{Data: &postData})
 	check(err)
 
