@@ -1,4 +1,4 @@
-# Canvas CLI
+# Canvas CLI *(Deprecated)*
 
 **DEPRECATED** This was built on an our very first private API. We'll have a CLI sooner or later but aren't quite ready with one, yet.
 
